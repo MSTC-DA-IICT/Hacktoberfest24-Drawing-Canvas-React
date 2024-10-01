@@ -1,0 +1,14 @@
+.App {
+  text-align: center;
+}
+
+.toolbar {
+  margin: 20px;
+}
+
+canvas {
+  border: 2px solid black;
+  display: block;
+  margin: 0 auto;
+  cursor: crosshair;
+}
