@@ -7,6 +7,7 @@ function App() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState('#000000');
   const [lineWidth, setLineWidth] = useState(5);
+  const [fileName, setFileName] = useState('drawing');
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -14,7 +15,7 @@ function App() {
     canvas.height = window.innerHeight * 2;
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
-    
+
     const context = canvas.getContext('2d');
     context.scale(2, 2);
     context.lineCap = 'round';
@@ -48,34 +49,52 @@ function App() {
     contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
   };
 
+  const exportCanvasAsImage = () => {
+    const canvas = canvasRef.current;
+    const image = canvas.toDataURL('image/png');
+    const anchor = document.createElement('a');
+    anchor.href = image;
+    anchor.download = `${fileName}.png`;
+    anchor.click();
+  };
+
   return (
-    <div className="App">
-      <h1>Collaborative Drawing Canvas</h1>
-      <div className="toolbar">
-        <label>
-          Color:
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
-        </label>
-        <label>
-          Brush Size:
-          <input
-            type="range"
-            min="1"
-            max="50"
-            value={lineWidth}
-            onChange={(e) => setLineWidth(e.target.value)}
-          />
-        </label>
-        <button onClick={clearCanvas}>Clear Canvas</button>
+      <div className="App">
+        <h1>Collaborative Drawing Canvas</h1>
+        <div className="toolbar">
+          <label>
+            Color:
+            <input type="color" value={color} onChange={(e) => setColor(e.target.value)}/>
+          </label>
+          <label>
+            Brush Size:
+            <input
+                type="range"
+                min="1"
+                max="50"
+                value={lineWidth}
+                onChange={(e) => setLineWidth(e.target.value)}
+            />
+          </label>
+          <button onClick={clearCanvas}>Clear Canvas</button>
+          <label>
+            File Name:
+            <input
+                type="text"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+            />
+          </label>
+          <button onClick={exportCanvasAsImage}>Download</button>
+        </div>
+        <canvas
+            ref={canvasRef}
+            onMouseDown={startDrawing}
+            onMouseUp={finishDrawing}
+            onMouseMove={draw}
+            className="drawing-canvas"
+        />
       </div>
-      <canvas
-        ref={canvasRef}
-        onMouseDown={startDrawing}
-        onMouseUp={finishDrawing}
-        onMouseMove={draw}
-        className="drawing-canvas"
-      />
-    </div>
   );
 }
 
