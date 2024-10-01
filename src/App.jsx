@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import './App.css';
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
   const [color, setColor] = useState('#000000');
   const [lineWidth, setLineWidth] = useState(5);
   const [fileName, setFileName] = useState('drawing');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -49,13 +51,38 @@ function App() {
     contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
   };
 
-  const exportCanvasAsImage = () => {
+  const exportCanvasAsImage = (format) => {
     const canvas = canvasRef.current;
-    const image = canvas.toDataURL('image/png');
+    const image = canvas.toDataURL(`image/${format}`);
     const anchor = document.createElement('a');
     anchor.href = image;
-    anchor.download = `${fileName}.png`;
+    anchor.download = `${fileName}.${format}`;
     anchor.click();
+    setIsDropdownOpen(false);
+  };
+
+  const downloadPDF = () => {
+    const canvas = canvasRef.current;
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "px",
+      format: [canvas.width, canvas.height],
+      putOnlyUsedFonts: true,
+      floatPrecision: 16
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg');
+    pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+    pdf.save(`${fileName}.pdf`);
+    setIsDropdownOpen(false);
+  };
+
+  const handleDownload = (format) => {
+    if (format === 'pdf') {
+      downloadPDF();
+    } else {
+      exportCanvasAsImage(format);
+    }
   };
 
   return (
@@ -64,7 +91,7 @@ function App() {
         <div className="toolbar">
           <label>
             Color:
-            <input type="color" value={color} onChange={(e) => setColor(e.target.value)}/>
+            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
           </label>
           <label>
             Brush Size:
@@ -85,7 +112,18 @@ function App() {
                 onChange={(e) => setFileName(e.target.value)}
             />
           </label>
-          <button onClick={exportCanvasAsImage}>Download</button>
+          <div className="dropdown">
+            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+              Download
+            </button>
+            {isDropdownOpen && (
+                <div className="dropdown-menu">
+                  <button onClick={() => handleDownload('png')}>PNG</button>
+                  <button onClick={() => handleDownload('jpeg')}>JPEG</button>
+                  <button onClick={() => handleDownload('pdf')}>PDF</button>
+                </div>
+            )}
+          </div>
         </div>
         <canvas
             ref={canvasRef}
