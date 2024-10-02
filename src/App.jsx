@@ -25,8 +25,7 @@ function App() {
     context.lineWidth = lineWidth;
     contextRef.current = context;
 
-    // Load saved canvas data from LocalStorage when the component mounts
-    loadCanvasData();
+     loadCanvasData();
   }, [color, lineWidth]);
 
   const startDrawing = ({ nativeEvent }) => {
@@ -40,8 +39,7 @@ function App() {
     contextRef.current.closePath();
     setIsDrawing(false);
 
-    // Save canvas to LocalStorage after drawing
-    saveCanvasData();
+     saveCanvasData();
   };
 
   const draw = ({ nativeEvent }) => {
@@ -55,7 +53,7 @@ function App() {
 
   const clearCanvas = () => {
     contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-    saveCanvasData();  // Save the cleared canvas to LocalStorage
+    saveCanvasData();  
   };
 
   const exportCanvasAsImage = (format) => {
