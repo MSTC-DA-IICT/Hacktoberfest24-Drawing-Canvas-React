@@ -24,6 +24,9 @@ function App() {
     context.strokeStyle = color;
     context.lineWidth = lineWidth;
     contextRef.current = context;
+
+    // Load saved canvas data from LocalStorage when the component mounts
+    loadCanvasData();
   }, [color, lineWidth]);
 
   const startDrawing = ({ nativeEvent }) => {
@@ -36,6 +39,9 @@ function App() {
   const finishDrawing = () => {
     contextRef.current.closePath();
     setIsDrawing(false);
+
+    // Save canvas to LocalStorage after drawing
+    saveCanvasData();
   };
 
   const draw = ({ nativeEvent }) => {
@@ -49,6 +55,7 @@ function App() {
 
   const clearCanvas = () => {
     contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    saveCanvasData();  // Save the cleared canvas to LocalStorage
   };
 
   const exportCanvasAsImage = (format) => {
@@ -82,6 +89,27 @@ function App() {
       downloadPDF();
     } else {
       exportCanvasAsImage(format);
+    }
+  };
+
+  // Saving functionality
+  const saveCanvasData = () => {
+    const canvas = canvasRef.current;
+    const canvasData = canvas.toDataURL();
+    localStorage.setItem('savedCanvas', canvasData);
+  };
+
+   const loadCanvasData = () => {
+    const savedCanvas = localStorage.getItem('savedCanvas');
+    if (savedCanvas) {
+      const canvas = canvasRef.current;
+      const context = contextRef.current;
+      const image = new Image();
+      image.src = savedCanvas;
+      image.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height); 
+        context.drawImage(image, 0, 0, canvas.width / 2, canvas.height / 2);  
+      };
     }
   };
 
