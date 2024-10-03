@@ -36,6 +36,13 @@ function App() {
 
         loadCanvasData();
         loadFileName();
+
+        //  event   storage changes to sync across tabs
+        window.addEventListener('storage', syncCanvasAcrossTabs);
+
+        return () => {
+            window.removeEventListener('storage', syncCanvasAcrossTabs);
+        };
     }, []);
 
     useEffect(() => {
@@ -180,10 +187,12 @@ function App() {
         }
     };
 
+    //save CanvasData  
     const saveCanvasData = () => {
         const canvas = canvasRef.current;
         const canvasData = canvas.toDataURL();
         localStorage.setItem('savedCanvas', canvasData);
+         localStorage.setItem('canvasUpdateTime', Date.now());
     };
 
     const loadCanvasData = () => {
@@ -208,6 +217,12 @@ function App() {
         const savedFileName = localStorage.getItem('fileName');
         if (savedFileName) {
             setFileName(savedFileName);
+        }
+    };
+
+     const syncCanvasAcrossTabs = (event) => {
+        if (event.key === 'savedCanvas') {
+            loadCanvasData();
         }
     };
 
