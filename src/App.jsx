@@ -6,18 +6,19 @@ function App() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [color, setColor] = useState('#000000');  // Default color
-  const [lineWidth, setLineWidth] = useState(5);  // Default brush size
+  const [color, setColor] = useState('#000000');  //  color
+  const [lineWidth, setLineWidth] = useState(5);  // brush size
   const [fileName, setFileName] = useState('drawing');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Load the saved color and brush size on component mount
-  useEffect(() => {
+   useEffect(() => {
     const savedColor = localStorage.getItem('brushColor');
     const savedLineWidth = localStorage.getItem('brushSize');
+    const savedFileName = localStorage.getItem('fileName');  
 
     if (savedColor) setColor(savedColor);
     if (savedLineWidth) setLineWidth(Number(savedLineWidth));
+    if (savedFileName) setFileName(savedFileName);  
 
     const canvas = canvasRef.current;
     canvas.width = window.innerWidth * 2;
@@ -33,8 +34,7 @@ function App() {
     loadCanvasData();
   }, []);
 
-  // Update canvas context when color or lineWidth changes
-  useEffect(() => {
+   useEffect(() => {
     if (contextRef.current) {
       contextRef.current.strokeStyle = color;
       contextRef.current.lineWidth = lineWidth;
@@ -52,8 +52,7 @@ function App() {
     contextRef.current.closePath();
     setIsDrawing(false);
 
-    // Save brush size and color when drawing is finished
-    localStorage.setItem('brushColor', color);
+     localStorage.setItem('brushColor', color);
     localStorage.setItem('brushSize', lineWidth);
 
     saveCanvasData();
@@ -126,6 +125,12 @@ function App() {
     }
   };
 
+   const handleFileNameChange = (e) => {
+    const newFileName = e.target.value;
+    setFileName(newFileName);
+    localStorage.setItem('fileName', newFileName);  
+  };
+
   return (
     <div className="App">
       <h1>Collaborative Drawing Canvas</h1>
@@ -154,7 +159,7 @@ function App() {
           <input
             type="text"
             value={fileName}
-            onChange={(e) => setFileName(e.target.value)}
+            onChange={handleFileNameChange} // Save file 
           />
         </label>
         <div className="dropdown">
