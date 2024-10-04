@@ -13,16 +13,20 @@ function App() {
     const [startY, setStartY] = useState(0);
     const [canvasData, setCanvasData] = useState(null);
 
-    const [brushColor, setBrushColor] = useState('#000000');
-    const [brushSize, setBrushSize] = useState(5);
-    const [rectangleColor, setRectangleColor] = useState('#000000');
-    const [rectangleSize, setRectangleSize] = useState(5);
-    const [circleColor, setCircleColor] = useState('#000000');
-    const [circleSize, setCircleSize] = useState(5);
-    const [lineColor, setLineColor] = useState('#000000');
-    const [lineSize, setLineSize] = useState(5);
+    // Unified state for tool properties (color, size)
+    const [toolProperties, setToolProperties] = useState({
+        brush: { color: '#000000', size: 5 },
+        rectangle: { color: '#000000', size: 5 },
+        circle: { color: '#000000', size: 5 },
+        line: { color: '#000000', size: 5 }
+    });
 
     useEffect(() => {
+        const savedToolProperties = localStorage.getItem('toolProperties');
+        if (savedToolProperties) {
+            setToolProperties(JSON.parse(savedToolProperties));
+        }
+
         const canvas = canvasRef.current;
         canvas.width = window.innerWidth * 2;
         canvas.height = window.innerHeight * 2;
@@ -37,7 +41,6 @@ function App() {
         loadCanvasData();
         loadFileName();
 
-        //  event   storage changes to sync across tabs
         window.addEventListener('storage', syncCanvasAcrossTabs);
 
         return () => {
@@ -47,28 +50,22 @@ function App() {
 
     useEffect(() => {
         if (contextRef.current) {
-            switch (currentTool) {
-                case 'brush':
-                    contextRef.current.strokeStyle = brushColor;
-                    contextRef.current.lineWidth = brushSize;
-                    break;
-                case 'rectangle':
-                    contextRef.current.strokeStyle = rectangleColor;
-                    contextRef.current.lineWidth = rectangleSize;
-                    break;
-                case 'circle':
-                    contextRef.current.strokeStyle = circleColor;
-                    contextRef.current.lineWidth = circleSize;
-                    break;
-                case 'line':
-                    contextRef.current.strokeStyle = lineColor;
-                    contextRef.current.lineWidth = lineSize;
-                    break;
-                default:
-                    break;
-            }
+            const { color, size } = toolProperties[currentTool];
+            contextRef.current.strokeStyle = color;
+            contextRef.current.lineWidth = size;
         }
-    }, [brushColor, brushSize, rectangleColor, rectangleSize, circleColor, circleSize, lineColor, lineSize, currentTool]);
+    }, [currentTool, toolProperties]);
+
+    const updateToolProperties = (tool, property, value) => {
+        setToolProperties((prevProperties) => {
+            const newProperties = {
+                ...prevProperties,
+                [tool]: { ...prevProperties[tool], [property]: value },
+            };
+            localStorage.setItem('toolProperties', JSON.stringify(newProperties));
+            return newProperties;
+        });
+    };
 
     const startDrawing = ({ nativeEvent }) => {
         const { offsetX, offsetY } = nativeEvent;
@@ -187,12 +184,11 @@ function App() {
         }
     };
 
-    //save CanvasData  
     const saveCanvasData = () => {
         const canvas = canvasRef.current;
         const canvasData = canvas.toDataURL();
         localStorage.setItem('savedCanvas', canvasData);
-         localStorage.setItem('canvasUpdateTime', Date.now());
+        localStorage.setItem('canvasUpdateTime', Date.now());
     };
 
     const loadCanvasData = () => {
@@ -220,7 +216,7 @@ function App() {
         }
     };
 
-     const syncCanvasAcrossTabs = (event) => {
+    const syncCanvasAcrossTabs = (event) => {
         if (event.key === 'savedCanvas') {
             loadCanvasData();
         }
@@ -255,125 +251,45 @@ function App() {
                     Line
                 </button>
 
-                {currentTool === 'brush' && (
-                    <>
-                        <label>
-                            Brush Color:
-                            <input
-                                type="color"
-                                value={brushColor}
-                                onChange={(e) => setBrushColor(e.target.value)}
-                            />
-                        </label>
-                        <label>
-                            Brush Size:
-                            <input
-                                type="range"
-                                min="1"
-                                max="50"
-                                value={brushSize}
-                                onChange={(e) => setBrushSize(e.target.value)}
-                            />
-                        </label>
-                    </>
-                )}
-                {currentTool === 'rectangle' && (
-                    <>
-                        <label>
-                            Rectangle Color:
-                            <input
-                                type="color"
-                                value={rectangleColor}
-                                onChange={(e) => setRectangleColor(e.target.value)}
-                            />
-                        </label>
-                        <label>
-                            Rectangle Size:
-                            <input
-                                type="range"
-                                min="1"
-                                max="50"
-                                value={rectangleSize}
-                                onChange={(e) => setRectangleSize(e.target.value)}
-                            />
-                        </label>
-                    </>
-                )}
-                {currentTool === 'circle' && (
-                    <>
-                        <label>
-                            Circle Color:
-                            <input
-                                type="color"
-                                value={circleColor}
-                                onChange={(e) => setCircleColor(e.target.value)}
-                            />
-                        </label>
-                        <label>
-                            Circle Size:
-                            <input
-                                type="range"
-                                min="1"
-                                max="50"
-                                value={circleSize}
-                                onChange={(e) => setCircleSize(e.target.value)}
-                            />
-                        </label>
-                    </>
-                )}
-                {currentTool === 'line' && (
-                    <>
-                        <label>
-                            Line Color:
-                            <input
-                                type="color"
-                                value={lineColor}
-                                onChange={(e) => setLineColor(e.target.value)}
-                            />
-                        </label>
-                        <label>
-                            Line Size:
-                            <input
-                                type="range"
-                                min="1"
-                                max="50"
-                                value={lineSize}
-                                onChange={(e) => setLineSize(e.target.value)}
-                            />
-                        </label>
-                    </>
-                )}
-
-                <button className="clear-button" onClick={clearCanvas}>
-                    Clear Canvas
-                </button>
-
+                <label>
+                    Color:
+                    <input
+                        type="color"
+                        value={toolProperties[currentTool].color}
+                        onChange={(e) => updateToolProperties(currentTool, 'color', e.target.value)}
+                    />
+                </label>
+                <label>
+                    Size:
+                    <input
+                        type="range"
+                        min="1"
+                        max="50"
+                        value={toolProperties[currentTool].size}
+                        onChange={(e) => updateToolProperties(currentTool, 'size', e.target.value)}
+                    />
+                </label>
+                <button onClick={clearCanvas}>Clear Canvas</button>
                 <input
                     type="text"
+                    placeholder="File name"
                     value={fileName}
                     onChange={(e) => {
                         setFileName(e.target.value);
                         saveFileName(e.target.value);
                     }}
-                    placeholder="File Name"
                 />
                 <div className="dropdown">
-                    <button
-                        className="download-button"
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    >
-                        Download
-                    </button>
+                    <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>Download</button>
                     {isDropdownOpen && (
                         <ul className="dropdown-menu">
-                            <li onClick={() => handleDownload('jpeg')}>Download JPEG</li>
                             <li onClick={() => handleDownload('png')}>Download PNG</li>
+                            <li onClick={() => handleDownload('jpeg')}>Download JPEG</li>
                             <li onClick={() => handleDownload('pdf')}>Download PDF</li>
                         </ul>
                     )}
                 </div>
             </div>
-
             <canvas
                 ref={canvasRef}
                 onMouseDown={startDrawing}
