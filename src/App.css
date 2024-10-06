@@ -13,6 +13,24 @@ canvas {
   cursor: crosshair;
 }
 
+.canvas.selected {
+  background-color: black;
+  color: white;
+}
+
+.canvas.selected-light {
+  background-color: black;
+  color: white;
+
+}
+
+.canvas.selected-dark {
+  background-color: white;
+  color: black;
+  border: 1px solid black; 
+}
+
+
 .dropdown {
   position: relative;
   display: inline-block;
@@ -68,3 +86,14 @@ canvas {
   color: white;
 }
 
+.tool-button.selected-light {
+  background-color: black;
+  color: white;
+
+}
+
+.tool-button.selected-dark {
+  background-color: white;
+  color: black;
+  border: 1px solid black; 
+}
