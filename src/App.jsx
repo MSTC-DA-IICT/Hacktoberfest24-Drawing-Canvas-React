@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
+import ThreeScene from './ThreeScene';
 import './App.css';
 
 function App() {
@@ -225,6 +226,9 @@ function App() {
     return (
         <div className="App">
             <h1>Collaborative Drawing Canvas</h1>
+            <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0 }}>
+                <ThreeScene />
+            </div>
             <div className="toolbar">
                 <button
                     className={`tool-button ${currentTool === 'brush' ? 'selected' : ''}`}
@@ -290,6 +294,7 @@ function App() {
                     )}
                 </div>
             </div>
+            
             <canvas
                 ref={canvasRef}
                 onMouseDown={startDrawing}
@@ -300,5 +305,4 @@ function App() {
         </div>
     );
 }
-
 export default App;
