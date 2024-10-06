@@ -12,6 +12,8 @@ function App() {
     const [startX, setStartX] = useState(0);
     const [startY, setStartY] = useState(0);
     const [canvasData, setCanvasData] = useState(null);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [viewMode, setViewMode] = useState('grid');
 
     // Unified state for tool properties (color, size)
     const [toolProperties, setToolProperties] = useState({
@@ -176,7 +178,7 @@ function App() {
         setIsDropdownOpen(false);
     };
 
-    const handleDownload = (format) => {
+    const handleDownload = () => {
         if (format === 'pdf') {
             downloadPDF();
         } else {
@@ -222,81 +224,101 @@ function App() {
         }
     };
 
-    return (
-        <div className="App">
-            <h1>Collaborative Drawing Canvas</h1>
-            <div className="toolbar">
-                <button
-                    className={`tool-button ${currentTool === 'brush' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('brush')}
-                >
-                    Brush
-                </button>
-                <button
-                    className={`tool-button ${currentTool === 'rectangle' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('rectangle')}
-                >
-                    Rectangle
-                </button>
-                <button
-                    className={`tool-button ${currentTool === 'circle' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('circle')}
-                >
-                    Circle
-                </button>
-                <button
-                    className={`tool-button ${currentTool === 'line' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('line')}
-                >
-                    Line
-                </button>
+    const handleViewModeChange = (mode) => {
+        setViewMode(mode);
+        setIsSettingsOpen(false);
+    };
 
-                <label>
-                    Color:
-                    <input
-                        type="color"
-                        value={toolProperties[currentTool].color}
-                        onChange={(e) => updateToolProperties(currentTool, 'color', e.target.value)}
+    return (
+        <div className={`App ${viewMode}`}>
+            <h1 className="app-title">Collaborative Drawing Canvas</h1>
+            <div className="main-content">
+                <div className={`toolbar ${viewMode === 'list' ? 'list-view' : ''}`}>
+                    <div className="toolbar-items">
+                        <button
+                            className={`tool-button ${currentTool === 'brush' ? 'selected' : ''}`}
+                            onClick={() => setCurrentTool('brush')}
+                        >
+                            Brush
+                        </button>
+                        <button
+                            className={`tool-button ${currentTool === 'rectangle' ? 'selected' : ''}`}
+                            onClick={() => setCurrentTool('rectangle')}
+                        >
+                            Rectangle
+                        </button>
+                        <button
+                            className={`tool-button ${currentTool === 'circle' ? 'selected' : ''}`}
+                            onClick={() => setCurrentTool('circle')}
+                        >
+                            Circle
+                        </button>
+                        <button
+                            className={`tool-button ${currentTool === 'line' ? 'selected' : ''}`}
+                            onClick={() => setCurrentTool('line')}
+                        >
+                            Line
+                        </button>
+
+                        <label>
+                            Color:
+                            <input
+                                type="color"
+                                value={toolProperties[currentTool].color}
+                                onChange={(e) => updateToolProperties(currentTool, 'color', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            Size:
+                            <input
+                                type="range"
+                                min="1"
+                                max="50"
+                                value={toolProperties[currentTool].size}
+                                onChange={(e) => updateToolProperties(currentTool, 'size', e.target.value)}
+                            />
+                        </label>
+                        <button onClick={clearCanvas}>Clear Canvas</button>
+                        <input
+                            type="text"
+                            placeholder="File name"
+                            value={fileName}
+                            onChange={(e) => {
+                                setFileName(e.target.value);
+                                saveFileName(e.target.value);
+                            }}
+                        />
+                        <div className="dropdown">
+                            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>Download</button>
+                            {isDropdownOpen && (
+                                <ul className="dropdown-menu">
+                                    <li onClick={() => handleDownload('png')}>Download PNG</li>
+                                    <li onClick={() => handleDownload('jpeg')}>Download JPEG</li>
+                                    <li onClick={() => handleDownload('pdf')}>Download PDF</li>
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <div className="canvas-container">
+                    <canvas
+                        ref={canvasRef}
+                        onMouseDown={startDrawing}
+                        onMouseMove={drawShape}
+                        onMouseUp={finishDrawing}
+                        onMouseLeave={finishDrawing}
                     />
-                </label>
-                <label>
-                    Size:
-                    <input
-                        type="range"
-                        min="1"
-                        max="50"
-                        value={toolProperties[currentTool].size}
-                        onChange={(e) => updateToolProperties(currentTool, 'size', e.target.value)}
-                    />
-                </label>
-                <button onClick={clearCanvas}>Clear Canvas</button>
-                <input
-                    type="text"
-                    placeholder="File name"
-                    value={fileName}
-                    onChange={(e) => {
-                        setFileName(e.target.value);
-                        saveFileName(e.target.value);
-                    }}
-                />
-                <div className="dropdown">
-                    <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>Download</button>
-                    {isDropdownOpen && (
-                        <ul className="dropdown-menu">
-                            <li onClick={() => handleDownload('png')}>Download PNG</li>
-                            <li onClick={() => handleDownload('jpeg')}>Download JPEG</li>
-                            <li onClick={() => handleDownload('pdf')}>Download PDF</li>
-                        </ul>
-                    )}
                 </div>
             </div>
-            <canvas
-                ref={canvasRef}
-                onMouseDown={startDrawing}
-                onMouseMove={drawShape}
-                onMouseUp={finishDrawing}
-                onMouseLeave={finishDrawing}
-            />
+            <div className="dropdown settings-dropdown" style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1002 }}>
+                <button onClick={() => setIsSettingsOpen(!isSettingsOpen)}>Settings</button>
+                {isSettingsOpen && (
+                    <ul className="dropdown-menu">
+                        <li onClick={() => handleViewModeChange('grid')}>Grid View</li>
+                        <li onClick={() => handleViewModeChange('list')}>List View</li>
+                    </ul>
+                )}
+            </div>
         </div>
     );
 }
