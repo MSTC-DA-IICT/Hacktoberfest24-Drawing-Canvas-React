@@ -1,6 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import './App.css';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Switch } from "@mui/material";
+import DarkModeSwitch from './component/DarkModeSwitch';
 
 function App() {
     const canvasRef = useRef(null);
@@ -9,9 +13,30 @@ function App() {
     const [fileName, setFileName] = useState('drawing');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [currentTool, setCurrentTool] = useState('brush');
+    const [toggleDarkMode, setToggleDarkMode] = useState(true);
     const [startX, setStartX] = useState(0);
     const [startY, setStartY] = useState(0);
     const [canvasData, setCanvasData] = useState(null);
+
+    // function to toggle the dark mode as true or false
+
+    const toggleDarkTheme = () => {
+        setToggleDarkMode(!toggleDarkMode);
+    };
+
+    //   Apply The Primary and Secondary Theme Colors 
+
+    const darkTheme = createTheme({
+        palette: {
+            mode: toggleDarkMode ? 'dark' : 'light', // handle the dark mode state on toggle
+            primary: {
+                main: '#90caf9',
+            },
+            secondary: {
+                main: '#131052',
+            },
+        },
+    });
 
     // Unified state for tool properties (color, size)
     const [toolProperties, setToolProperties] = useState({
@@ -26,7 +51,6 @@ function App() {
         if (savedToolProperties) {
             setToolProperties(JSON.parse(savedToolProperties));
         }
-
         const canvas = canvasRef.current;
         canvas.width = window.innerWidth * 2;
         canvas.height = window.innerHeight * 2;
@@ -66,6 +90,7 @@ function App() {
             return newProperties;
         });
     };
+
 
     const startDrawing = ({ nativeEvent }) => {
         const { offsetX, offsetY } = nativeEvent;
@@ -222,83 +247,189 @@ function App() {
         }
     };
 
-    return (
-        <div className="App">
-            <h1>Collaborative Drawing Canvas</h1>
-            <div className="toolbar">
-                <button
-                    className={`tool-button ${currentTool === 'brush' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('brush')}
-                >
-                    Brush
-                </button>
-                <button
-                    className={`tool-button ${currentTool === 'rectangle' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('rectangle')}
-                >
-                    Rectangle
-                </button>
-                <button
-                    className={`tool-button ${currentTool === 'circle' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('circle')}
-                >
-                    Circle
-                </button>
-                <button
-                    className={`tool-button ${currentTool === 'line' ? 'selected' : ''}`}
-                    onClick={() => setCurrentTool('line')}
-                >
-                    Line
-                </button>
+    if (toggleDarkMode) {
+        return (
+            <ThemeProvider theme={darkTheme}>
+                <CssBaseline />
+                <div className="App">
+                    <h1>Collaborative Drawing Canvas</h1>
+                    <div className="toolbar">
 
-                <label>
-                    Color:
-                    <input
-                        type="color"
-                        value={toolProperties[currentTool].color}
-                        onChange={(e) => updateToolProperties(currentTool, 'color', e.target.value)}
+                        <button
+                            className={`tool-button ${currentTool === 'brush' ? 'selected' : ''} selected-dark`}
+                            onClick={() => setCurrentTool('brush')}
+                        >
+                            Brush
+                        </button>
+
+                        <button
+                            className={`tool-button ${currentTool === 'rectangle' ? 'selected' : ''} selected-dark`}
+                            onClick={() => setCurrentTool('rectangle')}
+                        >
+                            Rectangle
+                        </button>
+                        <button
+                            className={`tool-button ${currentTool === 'circle' ? 'selected' : ''} selected-dark`}
+
+                            onClick={() => setCurrentTool('circle')}
+                        >
+                            Circle
+                        </button>
+                        <button
+                            className={`tool-button ${currentTool === 'line' ? 'selected' : ''} selected-dark`}
+                            onClick={() => setCurrentTool('line')}
+                        >
+                            Line
+                        </button>
+
+                        <label>
+                            Color:
+                            <input
+                                type="color"
+                                value={toolProperties[currentTool].color}
+                                onChange={(e) => updateToolProperties(currentTool, 'color', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            Size:
+                            <input
+                                type="range"
+                                min="1"
+                                max="50"
+                                value={toolProperties[currentTool].size}
+                                onChange={(e) => updateToolProperties(currentTool, 'size', e.target.value)}
+                            />
+                        </label>
+                        <button className='selected-dark' onClick={clearCanvas}>Clear Canvas</button>
+                        <input
+                            type="text"
+                            placeholder="File name"
+                            value={fileName}
+                            onChange={(e) => {
+                                setFileName(e.target.value);
+                                saveFileName(e.target.value);
+                            }}
+                        />
+                        <div className="dropdown">
+                            <button className='selected-dark' onClick={() => setIsDropdownOpen(!isDropdownOpen)}>Download</button>
+                            {isDropdownOpen && (
+                                <ul className="dropdown-menu">
+                                    <li onClick={() => handleDownload('png')}>Download PNG</li>
+                                    <li onClick={() => handleDownload('jpeg')}>Download JPEG</li>
+                                    <li onClick={() => handleDownload('pdf')}>Download PDF</li>
+                                </ul>
+                            )}
+                        </div>
+
+
+                        <DarkModeSwitch checked={toggleDarkMode} onChange={toggleDarkTheme} />
+                    </div>
+                    <canvas
+                        ref={canvasRef}
+                        onMouseDown={startDrawing}
+                        onMouseMove={drawShape}
+                        onMouseUp={finishDrawing}
+                        onMouseLeave={finishDrawing}
                     />
-                </label>
-                <label>
-                    Size:
-                    <input
-                        type="range"
-                        min="1"
-                        max="50"
-                        value={toolProperties[currentTool].size}
-                        onChange={(e) => updateToolProperties(currentTool, 'size', e.target.value)}
-                    />
-                </label>
-                <button onClick={clearCanvas}>Clear Canvas</button>
-                <input
-                    type="text"
-                    placeholder="File name"
-                    value={fileName}
-                    onChange={(e) => {
-                        setFileName(e.target.value);
-                        saveFileName(e.target.value);
-                    }}
-                />
-                <div className="dropdown">
-                    <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>Download</button>
-                    {isDropdownOpen && (
-                        <ul className="dropdown-menu">
-                            <li onClick={() => handleDownload('png')}>Download PNG</li>
-                            <li onClick={() => handleDownload('jpeg')}>Download JPEG</li>
-                            <li onClick={() => handleDownload('pdf')}>Download PDF</li>
-                        </ul>
-                    )}
                 </div>
-            </div>
-            <canvas
-                ref={canvasRef}
-                onMouseDown={startDrawing}
-                onMouseMove={drawShape}
-                onMouseUp={finishDrawing}
-                onMouseLeave={finishDrawing}
-            />
-        </div>
-    );
+            </ThemeProvider>
+
+        );
+    }
+
+    else {
+        return (
+            <ThemeProvider theme={darkTheme}>
+                <CssBaseline />
+
+                <div className="App">
+                    <h1>Collaborative Drawing Canvas</h1>
+                    <div className="toolbar">
+
+                        <button
+                            className={`tool-button ${currentTool === 'brush' ? 'selected' : ''} selected-light`}
+                            onClick={() => setCurrentTool('brush')}
+                        >
+                            Brush
+                        </button>
+
+                        <button
+                            className={`tool-button ${currentTool === 'rectangle' ? 'selected' : ''} selected-light`}
+                            onClick={() => setCurrentTool('rectangle')}
+                        >
+                            Rectangle
+                        </button>
+                        <button
+                            className={`tool-button ${currentTool === 'circle' ? 'selected' : ''} selected-light`}
+
+                            onClick={() => setCurrentTool('circle')}
+                        >
+                            Circle
+                        </button>
+                        <button
+                            className={`tool-button ${currentTool === 'line' ? 'selected' : ''} selected-light`}
+                            onClick={() => setCurrentTool('line')}
+                        >
+                            Line
+                        </button>
+
+                        <label>
+                            Color:
+                            <input
+                                type="color"
+                                value={toolProperties[currentTool].color}
+                                onChange={(e) => updateToolProperties(currentTool, 'color', e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            Size:
+                            <input
+                                type="range"
+                                min="1"
+                                max="50"
+                                value={toolProperties[currentTool].size}
+                                onChange={(e) => updateToolProperties(currentTool, 'size', e.target.value)}
+                            />
+                        </label>
+                        <button className='selected-light' onClick={clearCanvas}>Clear Canvas</button>
+                        <input
+                            type="text"
+                            placeholder="File name"
+                            value={fileName}
+                            onChange={(e) => {
+                                setFileName(e.target.value);
+                                saveFileName(e.target.value);
+                            }}
+                        />
+                        <div className="dropdown">
+                            <button className='selected-light' onClick={() => setIsDropdownOpen(!isDropdownOpen)}>Download</button>
+                            {isDropdownOpen && (
+                                <ul className="dropdown-menu">
+                                    <li onClick={() => handleDownload('png')}>Download PNG</li>
+                                    <li onClick={() => handleDownload('jpeg')}>Download JPEG</li>
+                                    <li onClick={() => handleDownload('pdf')}>Download PDF</li>
+                                </ul>
+                            )}
+                        </div>
+                        <DarkModeSwitch checked={toggleDarkMode} onChange={toggleDarkTheme} />
+
+
+                    </div>
+                    <canvas
+                        ref={canvasRef}
+                        onMouseDown={startDrawing}
+                        onMouseMove={drawShape}
+                        onMouseUp={finishDrawing}
+                        onMouseLeave={finishDrawing}
+                    />
+                </div>
+
+
+
+            </ThemeProvider>
+        );
+    }
 }
+
 
 export default App;
