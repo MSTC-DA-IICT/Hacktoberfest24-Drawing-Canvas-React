@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.2.7",
+    "jspdf": "^2.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "jspdf": "^2.5.2"
+    "react-redux": "^9.1.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
