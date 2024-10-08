@@ -42,10 +42,26 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
 }
+button.selected {
+  background-color: black;
+  color: white;
+}
+
+button.selected-light {
+  background-color: black;
+  color: white;
+
+}
+
+button.selected-dark {
+  background-color: white;
+  color: black;
+  border: 1px solid black; 
+}
+
 button:hover {
   border-color: #646cff;
 }
@@ -66,3 +82,4 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
