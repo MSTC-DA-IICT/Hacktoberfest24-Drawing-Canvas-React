@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { jsPDF } from 'jspdf';
 import './App.css';
 
 function App() {
@@ -14,7 +13,10 @@ function App() {
     const [canvasData, setCanvasData] = useState(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [viewMode, setViewMode] = useState('grid');
+    const [canvasHistory, setCanvasHistory] = useState([]);
+    const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
+    // Unified state for tool properties (color, size)
     // Unified state for tool properties (color, size)
     const [toolProperties, setToolProperties] = useState({
         brush: { color: '#000000', size: 5 },
@@ -48,7 +50,19 @@ function App() {
         return () => {
             window.removeEventListener('storage', syncCanvasAcrossTabs);
         };
+
+        const savedCanvasHistory = localStorage.getItem('canvasHistory');
+        if (savedCanvasHistory) {
+            setCanvasHistory(JSON.parse(savedCanvasHistory));
+            setCurrentHistoryIndex(JSON.parse(localStorage.getItem('currentHistoryIndex')));
+        }
     }, []);
+
+    useEffect(() => {
+        // Save the canvas history to local storage
+        localStorage.setItem('canvasHistory', JSON.stringify(canvasHistory));
+        localStorage.setItem('currentHistoryIndex', JSON.stringify(currentHistoryIndex));
+    }, [canvasHistory, currentHistoryIndex]);
 
     useEffect(() => {
         if (contextRef.current) {
@@ -191,6 +205,10 @@ function App() {
         const canvasData = canvas.toDataURL();
         localStorage.setItem('savedCanvas', canvasData);
         localStorage.setItem('canvasUpdateTime', Date.now());
+        const newCanvasHistory = [...canvasHistory];
+        newCanvasHistory.push(canvasRef.current.toDataURL());
+        setCanvasHistory(newCanvasHistory);
+        setCurrentHistoryIndex(newCanvasHistory.length - 1);
     };
 
     const loadCanvasData = () => {
@@ -227,6 +245,34 @@ function App() {
     const handleViewModeChange = (mode) => {
         setViewMode(mode);
         setIsSettingsOpen(false);
+    };
+
+    const undo = () => {
+        if (currentHistoryIndex >= 0) {
+            setCurrentHistoryIndex(currentHistoryIndex - 1);
+            const canvas = canvasRef.current;
+            const context = contextRef.current;
+            const image = new Image();
+            image.src = canvasHistory[currentHistoryIndex];
+            image.onload = () => {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(image, 0, 0, canvas.width / 2, canvas.height / 2);
+            };
+        }
+    };
+
+    const redo = () => {
+        if (currentHistoryIndex < canvasHistory.length - 1) {
+            setCurrentHistoryIndex(currentHistoryIndex + 1);
+            const canvas = canvasRef.current;
+            const context = contextRef.current;
+            const image = new Image();
+            image.src = canvasHistory[currentHistoryIndex];
+            image.onload = () => {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(image, 0, 0, canvas.width / 2, canvas.height / 2);
+            };
+        }
     };
 
     return (
@@ -279,6 +325,8 @@ function App() {
                             />
                         </label>
                         <button onClick={clearCanvas}>Clear Canvas</button>
+                        <button onClick={undo}>Undo</button>
+                        <button onClick={redo}>Redo</button>
                         <input
                             type="text"
                             placeholder="File name"
